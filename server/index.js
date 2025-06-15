@@ -21,7 +21,8 @@ app.post("/api/feedback", (req, res) => {
       id: Date.now(),
       message,
       timestamp: new Date().toISOString(),
-      upvotes: 0
+      upvotes: 0,
+      comments: []   // <-- each new feedback has its own empty comments array
     };
     feedbackList.push(newEntry);
     res.status(201).json(newEntry);
@@ -40,6 +41,34 @@ app.post("/api/feedback/:id/upvote", (req, res) => {
     res.status(404).json({ error: "Feedback not found" });
   }
 });
+
+// Add comment to a feedback item
+app.post("/api/feedback/:id/comments", (req, res) => {
+  const id = Number(req.params.id);
+  const { message } = req.body;
+
+  if (!message || message.trim() === "") {
+    return res.status(400).json({ error: "Comment message required" });
+  }
+
+  const item = feedbackList.find(f => f.id === id);
+  if (!item) {
+    return res.status(404).json({ error: "Feedback not found" });
+  }
+
+  if (!item.comments) item.comments = [];
+
+  const newComment = {
+    id: Date.now(),
+    message,
+    timestamp: new Date().toISOString()
+  };
+
+  item.comments.push(newComment);
+
+  res.status(201).json(newComment);
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
